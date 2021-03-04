@@ -1,6 +1,6 @@
 import argparse
-import os
 import subprocess
+from pathlib import Path
 from typing import Optional
 from typing import Sequence
 
@@ -23,18 +23,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                "problems": [],
     }
 
-    number_of_repos = len(config.get_cloned_repos())
+    repos = list(config.get_cloned_repos())
 
-    for i, repo in enumerate(list(config.get_cloned_repos())):
+    for cnt, repo in enumerate(repos, 1):
         if repo == "zopefoundation/zopetoolkit":  # causes buildout/setuptools endless loop
             continue
         if repo == "plone/plone.memoize":  # causes buildout/setuptools endless loop
             continue
-        path_repo = os.path.join(config.output_dir, repo)
-        path_tox = os.path.join(path_repo, "tox.ini")
-        if os.path.exists(path_tox):
-            print(f"about to run tox for {repo}, {i+1} of {number_of_repos}")
-            run = subprocess.run(["tox4", "-e py38", "-c", path_tox], stdout=subprocess.DEVNULL)
+        path_tox = Path(config.output_dir, repo, "tox.ini")
+        if path_tox.exists():
+            print(f"about to run tox for {repo}, {cnt} of {len(repos)}")
+            run = subprocess.run(["tox4", "-e py38", "-c", str(path_tox)], stdout=subprocess.DEVNULL)
             if run.returncode == 0:
                 print(f"tox4 run successful for {repo}")
                 results["successful"].append(repo)
